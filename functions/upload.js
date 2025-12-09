@@ -1,5 +1,17 @@
 import { errorHandling, telemetryData } from "./utils/middleware";
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*', // 允许所有域名访问，也可以修改为指定域名例如 'https://your-frontend.com'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function onRequestOptions(context) {
+    return new Response(null, {
+        headers: corsHeaders
+    });
+}
+
 export async function onRequestPost(context) {
     const { request, env } = context;
 
@@ -63,20 +75,28 @@ export async function onRequestPost(context) {
             });
         }
 
+       // 3. 修改成功响应：添加 CORS 头
         return new Response(
             JSON.stringify([{ 'src': `/file/${fileId}.${fileExtension}` }]),
             {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...corsHeaders // 合并 CORS 头
+                }
             }
         );
     } catch (error) {
         console.error('Upload error:', error);
+        // 4. 修改错误响应：添加 CORS 头（确保报错也能被前端捕获）
         return new Response(
             JSON.stringify({ error: error.message }),
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...corsHeaders // 合并 CORS 头
+                }
             }
         );
     }
